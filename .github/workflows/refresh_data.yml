@@ -1,0 +1,29 @@
+# Task 17: scheduled data refresh for the live dashboard.
+# Every Monday 05:30 IST (00:00 UTC): re-export the workbook, rebuild the published aggregates, run the
+# quality checks and tests, and commit the refreshed files. Streamlit Community Cloud redeploys on every push.
+name: Weekly data refresh
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python scripts/export_published.py
+      - run: pytest -q
+      - name: Commit refreshed data
+        run: |
+          git config user.name "pulseiq-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/published
+          git diff --cached --quiet || git commit -m "Scheduled data refresh"
+          git push
