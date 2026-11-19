@@ -167,6 +167,19 @@ with pages[2]:
         st.dataframe(byteam, use_container_width=True)
         st.download_button("Download team summary CSV", byteam.to_csv(index=False).encode("utf-8"), "team_productivity_summary.csv", "text/csv")
 
+def privacy_merge(df, sizes, col="department_name", n_min=5):
+    """Departments with fewer than n_min paid employees are merged with the next smallest department,
+    so no single person's pay can be seen or worked out from the totals."""
+    small = sizes[sizes < n_min].index.tolist()
+    if not small:
+        return df
+    partner = sizes[sizes >= n_min].idxmin()
+    label = " + ".join(sorted(small + [partner])) + " (combined for privacy)"
+    df = df.copy()
+    df.loc[df[col].isin(small + [partner]), col] = label
+    return df
+
+
 with pages[3]:
     st.header("Payroll cost and reconciliation")
     if payroll.empty:
@@ -177,6 +190,8 @@ with pages[3]:
         p["gross_pay"] = pd.to_numeric(p["gross_pay"], errors="coerce")
         p["net_pay"] = pd.to_numeric(p["net_pay"], errors="coerce")
         p["employer_cost"] = pd.to_numeric(p["employer_cost"], errors="coerce")
+        pay_sizes = p.groupby(["department_name", "month"])["employee_id"].nunique().groupby(level=0).max()
+        p = privacy_merge(p, pay_sizes)
         departments = ["All departments"] + sorted(p["department_name"].dropna().unique().tolist())
         selected = st.selectbox("Department", departments, key="pay_dept")
         if selected != "All departments": p = p[p.department_name == selected]
@@ -218,6 +233,12 @@ with pages[4]:
         v["variance"] = v.actual_employer_cost - v.budget_payroll_cost
         v["variance_pct"] = v.variance / v.budget_payroll_cost.replace(0, pd.NA) * 100
         v = dept_names(v)
+        pp = dept_names(payroll.copy())
+        pp["month"] = pd.to_datetime(pp["period_end_date"], errors="coerce").dt.to_period("M").astype(str)
+        v = privacy_merge(v, pp.groupby(["department_name", "month"])["employee_id"].nunique().groupby(level=0).max())
+        v = v.groupby(["department_name", "month"], as_index=False)[["actual_employer_cost", "budget_payroll_cost"]].sum(min_count=1)
+        v["variance"] = v.actual_employer_cost - v.budget_payroll_cost
+        v["variance_pct"] = v.variance / v.budget_payroll_cost.replace(0, pd.NA) * 100
         # Positive variance means overspend.
         st.caption("Sign convention: variance = actual employer cost − budget. Positive means overspend; negative means underspend.")
         departments = ["All departments"] + sorted(v["department_name"].dropna().unique().tolist())
