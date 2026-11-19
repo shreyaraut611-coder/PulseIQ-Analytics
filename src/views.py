@@ -740,3 +740,40 @@ def freshness() -> dict:
     return {"data_cutoff": CUTOFF_LABEL,
             "last_refresh": pd.Timestamp(newest, unit="s").strftime("%Y-%m-%d %H:%M UTC") if newest else "unknown",
             "statement": f"Numbers cover Apr 2025 to Sep 2026. Source data is cut off at {CUTOFF_LABEL}."}
+
+
+# ---------------------------------------------------------------- Final challenge · collections priority
+BEHAVIOUR_WEIGHT = {"risky": 1.5, "slow": 1.2}
+
+
+def collections_priority(top: int | None = None) -> pd.DataFrame:
+    """Rank open invoices by expected money at risk.
+
+    score = balance_due x age factor x client behaviour factor
+      age factor       = 1 + days_past_due / 90   (an invoice 90 days late counts double)
+      behaviour factor = 1.5 risky, 1.2 slow, 1.0 otherwise (from paid-invoice history)
+    Invoices not yet due get score 0 and go to the bottom.
+    """
+    o = open_invoices().copy()
+    beh = days_to_pay_by_client()[["client_id", "payment_behaviour", "days_over_terms"]]
+    o = o.merge(beh, on="client_id", how="left")
+    o["payment_behaviour"] = o["payment_behaviour"].fillna("no history")
+    late = o["days_past_due"].clip(lower=0)
+    o["age_factor"] = 1 + late / 90
+    o["behaviour_factor"] = o["payment_behaviour"].map(BEHAVIOUR_WEIGHT).fillna(1.0)
+    o["priority_score"] = (o["balance_due"] * o["age_factor"] * o["behaviour_factor"]).where(late > 0, 0.0)
+    o["action"] = pd.cut(late, [-1, 0, 30, 90, 10_000],
+                         labels=["Not due — no action", "Friendly reminder", "Call the client",
+                                 "Escalate + credit hold"]).astype(str)
+    cols = ["invoice_number", "client_name", "due_date", "days_past_due", "balance_due",
+            "payment_behaviour", "priority_score", "action"]
+    out = o.sort_values("priority_score", ascending=False)[cols].reset_index(drop=True)
+    out.index += 1
+    return out.head(top) if top else out
+
+
+def collections_coverage(n: int = 10) -> float:
+    """Share of overdue money covered by the top-n invoices on the priority list."""
+    p = collections_priority()
+    overdue = p.loc[p["days_past_due"] > 0, "balance_due"].sum()
+    return float(p.head(n)["balance_due"].sum() / overdue) if overdue else 0.0
