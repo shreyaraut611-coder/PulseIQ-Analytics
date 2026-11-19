@@ -1,0 +1,47 @@
+{
+  "data_cutoff": "30 Sep 2026",
+  "exported_at": "2026-11-19 07:25 UTC",
+  "total_bytes": 70720,
+  "tables": {
+    "dept_month": {
+      "file": "dept_month.parquet",
+      "rows": 198,
+      "bytes": 29980
+    },
+    "pnl_monthly": {
+      "file": "pnl_monthly.parquet",
+      "rows": 18,
+      "bytes": 6501
+    },
+    "cash_monthly": {
+      "file": "cash_monthly.parquet",
+      "rows": 18,
+      "bytes": 4247
+    },
+    "receivables_ageing": {
+      "file": "receivables_ageing.parquet",
+      "rows": 4,
+      "bytes": 2393
+    },
+    "client_days_to_pay": {
+      "file": "client_days_to_pay.parquet",
+      "rows": 28,
+      "bytes": 7743
+    },
+    "anomalies_by_type": {
+      "file": "anomalies_by_type.parquet",
+      "rows": 11,
+      "bytes": 4041
+    },
+    "headcount_forecast": {
+      "file": "headcount_forecast.parquet",
+      "rows": 87,
+      "bytes": 4816
+    },
+    "scorecard": {
+      "file": "scorecard.parquet",
+      "rows": 144,
+      "bytes": 10999
+    }
+  }
+}
