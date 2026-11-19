@@ -4,3 +4,7 @@ __pycache__/
 outputs/
 *.pyc
 .DS_Store
+
+.streamlit/secrets.toml
+.env
+reports/monthly/_charts/
