@@ -18,9 +18,19 @@ note("Grain: one row per department and month. Each source (headcount, payroll, 
 
 d = v.dept_month_impact()
 month = month_selector("dept_month")
-m = d[d["month"] == month]
+m = d[d["month"] == month].copy()
+# Privacy: pay is hidden for groups under 5 people and attrition for groups under 10 (metric dictionary).
+small_pay = m["headcount_end"] < 5
+if small_pay.sum() == 1:  # complementary suppression: the company total is shown below, so hide one more group
+    small_pay.loc[m.loc[~small_pay, "headcount_end"].idxmin()] = True
+m.loc[small_pay, ["employer_cost", "cost_per_head", "overtime_pay", "overtime_share_pct"]] = float("nan")
+m.loc[m["headcount_start"] < 10, "attrition_rate_pct"] = float("nan")
+if small_pay.any():
+    st.caption("Pay is hidden for departments with fewer than 5 people (plus one more, so it cannot be worked out "
+               "from the company total), and attrition for fewer than 10: "
+               + ", ".join(m.loc[small_pay, "department_name"]) + ".")
 
-fig = px.scatter(m, x="overtime_share_pct", y="attrition_rate_pct", size="employer_cost", color="department_name",
+fig = px.scatter(m.dropna(subset=["employer_cost", "overtime_share_pct", "attrition_rate_pct"]), x="overtime_share_pct", y="attrition_rate_pct", size="employer_cost", color="department_name",
                  hover_data=["headcount_end", "cost_per_head", "leave_days_per_head", "attendance_rate"],
                  title=f"Cost (bubble size), overtime share and attrition by department — {month}")
 st.plotly_chart(fig, use_container_width=True)
