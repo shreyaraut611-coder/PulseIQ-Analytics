@@ -1,0 +1,29 @@
+# Task 16: build the monthly report pack automatically.
+# Runs at 06:00 IST (00:30 UTC) on the 2nd of every month, and on demand from the Actions tab.
+name: Monthly report pack
+on:
+  schedule:
+    - cron: "30 0 2 * *"
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "Month YYYY-MM (leave empty for the latest month in the data)"
+        required: false
+        default: ""
+jobs:
+  build-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+      - name: Build report
+        run: python build_report.py --month "${{ github.event.inputs.month || 'latest' }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pulseiq-monthly-report
+          path: reports/monthly/*.pdf
