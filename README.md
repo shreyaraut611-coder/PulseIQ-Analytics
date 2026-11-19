@@ -12,7 +12,7 @@ Data runs from April 2025 to the **30 Sep 2026 cut-off**. Every page, report and
 | 4 | Monthly PDF pack, scheduled jobs, KPI explorer with privacy, metrics API, board deck | `phase-4`, `v1.0.0` |
 
 ## Live links
-- Dashboard: `<add your Streamlit Community Cloud link>`
+- Dashboard: https://pulseiq-shreya.streamlit.app
 - Metrics API: `<add your Render link>/docs`
 - Demo video: `<add your video link>`
 
