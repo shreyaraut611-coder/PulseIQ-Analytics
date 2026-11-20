@@ -11,6 +11,16 @@ Data runs from April 2025 to the **30 Sep 2026 cut-off**. Every page, report and
 | 3 | Profit & loss, receivables & cash, department view, AI signals, executive scorecard | `phase-3` |
 | 4 | Monthly PDF pack, scheduled jobs, KPI explorer with privacy, metrics API, board deck | `phase-4`, `v1.0.0` |
 
+## Phase folders (one repository for all four phases)
+PulseIQ is one application that grows phase by phase, so the runnable code stays at the repository root. Each phase folder is an index of what was built in that phase, where its files are, its report and how to run it:
+
+| Folder | Phase | Tag |
+|---|---|---|
+| [`phase-1/`](phase-1) | Data Foundations and Governance (Days 1–5) | – |
+| [`phase-2/`](phase-2) | People, Teams and Cost (Days 6–10) | `phase-2` |
+| [`phase-3/`](phase-3) | Company Health: Finance, Departments, AI, Scorecard (Days 11–15) | `phase-3` |
+| [`phase-4/`](phase-4) | Release: Reporting, Automation, Self-service, API, Board Pack (Days 16–20) | `phase-4`, `v1.0.0` |
+
 ## Live links
 - Dashboard: https://pulseiq-shreya.streamlit.app
 - Metrics API: `<add your Render link>/docs`
